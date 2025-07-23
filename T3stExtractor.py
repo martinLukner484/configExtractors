@@ -23,6 +23,7 @@ class TestMalware(Extractor):
 
     def run(self, stream: BinaryIO, matches: List = []) -> Optional[ExtractorModel]:
         cfg = ExtractorModel(family=self.family)
+        cfg.category.append(cfg.CategoryEnum.apt)
         self.logger.info("Yara Match for T3stExtractor!")
         cfg.other = {
             "Info": "T3stExtractor executed successfully",
