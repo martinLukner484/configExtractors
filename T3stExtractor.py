@@ -1,5 +1,6 @@
 from maco.extractor import Extractor
 from maco.model import ConnUsageEnum, ExtractorModel
+from typing import BinaryIO, List, Optional
 
 class TestMalware(Extractor):
     family = "Test Family"
