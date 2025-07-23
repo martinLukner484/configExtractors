@@ -1,5 +1,6 @@
 from maco.extractor import Extractor
-from maco.model import ConnUsageEnum, ExtractorModel
+from maco.model import ConnUsageEnum, ExtractorModel, CategoryEnum
+from typing import BinaryIO, List, Optional
 
 class TestMalware(Extractor):
     family = "Test Family"
@@ -21,8 +22,15 @@ class TestMalware(Extractor):
 """
 
     def run(self, stream: BinaryIO, matches: List = []) -> Optional[ExtractorModel]:
-                cfg.other = "Test result"
-                return cfg
+        data = stream.read()
+        cfg = ExtractorModel(family=self.family)
+        cfg.category.append(CategoryEnum.apt)
+        self.logger.info("Yara Match for T3stExtractor!")
+        cfg.other = {
+            "Info": "T3stExtractor executed successfully",
+            "Malware": "T3st"
+        }
+        return cfg
 
 
 if __name__ == "__main__":
