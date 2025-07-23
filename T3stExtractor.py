@@ -22,8 +22,10 @@ class TestMalware(Extractor):
 """
 
     def run(self, stream: BinaryIO, matches: List = []) -> Optional[ExtractorModel]:
-                cfg.other = "Test result"
-                return cfg
+        cfg = ExtractorModel(family=self.family)
+        self.logger.info("Yara Match for T3stExtractor!")
+        cfg.other = "T3stExtractor executed successfully"
+        return cfg
 
 
 if __name__ == "__main__":
