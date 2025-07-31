@@ -69,7 +69,6 @@ def find_matching_section(data):
         address = struct.unpack('<L', data[sectionHeader + i * 0x28 + 0x14:sectionHeader + i * 0x28 + 0x14 + 4])[0]
         size = struct.unpack('<L', data[sectionHeader + i * 0x28 + 0x8:sectionHeader + i * 0x28 + 0x8 + 4])[0]
         lastField = struct.unpack('<L', data[address + size - 4:address + size])[0]
-        print(f"Section: {i}, address: {hex(address)}, size: {hex(size)}, last 4 bytes: {hex(lastField)}")
         if lastField < size - 4:
             seed = struct.unpack('<L', data[address + size - lastField + 3:address + size - lastField + 7])[0]
             index = 0
@@ -83,7 +82,6 @@ def get_null_terminated_string(data, begin):
     i = begin
     result = ""
     while data[i] != 0:
-        print(data[i])
         result = result + chr(data[i])
         i = i + 1
     return result
@@ -146,7 +144,6 @@ class ToughprogressParser(Extractor):
         second_stage_size = struct.unpack('<L', second_stage_data[address + size - lastField - 1: address + size - lastField + 3])[0]
         second_stage_base = address + size - second_stage_size - 4
 
-        print(f"size: {hex(second_stage_size)}, second_stage_base: {hex(second_stage_data[second_stage_base])}")
         second_stage_data = xor_decode(second_stage_data, second_stage_base, second_stage_size)
         second_stage = Stage(second_stage_data)
 
