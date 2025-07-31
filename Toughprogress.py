@@ -151,8 +151,8 @@ class ToughprogressParser(Extractor):
         c2_reges_2 = "([a-zA-Z0-9\-]+\.apps\.googleusercontent\.com)"
 
         cfg = ExtractorModel(family=self.family)
-        cfg.http.append(cfg.Http(uri=re.search(c2_regex_1, second_stage.next_stage).match(0), ConnUsageEnum("c2")))
-        cfg.http.append(cfg.Http(uri=re.search(c2_regex_2, second_stage.next_stage).match(0), ConnUsageEnum("c2")))
+        cfg.http.append(cfg.Http(uri=re.search(c2_regex_1, second_stage.next_stage).match(1), usage=ConnUsageEnum("c2")))
+        cfg.http.append(cfg.Http(uri=re.search(c2_regex_2, second_stage.next_stage).match(1), usage=ConnUsageEnum("c2")))
         cfg.inject_exe.append(get_null_terminated_string(first_stage_data, first_stage.config_address + 0x11))
         return cfg
 
