@@ -148,6 +148,7 @@ class ToughprogressParser(Extractor):
         second_stage = Stage(second_stage_data)
 
         cfg = ExtractorModel(family=self.family)
+        cfg.http.append(cfg.Http(uri="test.com", usage=cfg.ConnUsageEnum("c2")))
         cfg.inject_exe.append(get_null_terminated_string(first_stage_data, first_stage.config_address + 0x11))
         return cfg
 
