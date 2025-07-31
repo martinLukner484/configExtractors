@@ -147,8 +147,8 @@ class ToughprogressParser(Extractor):
         second_stage_data = xor_decode(second_stage_data, second_stage_base, second_stage_size)
         second_stage = Stage(second_stage_data)
 
-        c2_regex_1 = "([abcdefABCDEF0-9]+@group\.calendar\.google\.com/events)"
-        c2_reges_2 = "([a-zA-Z0-9\-]+\.apps\.googleusercontent\.com)"
+        c2_regex_1 = b'([abcdefABCDEF0-9]+@group\.calendar\.google\.com/events)'
+        c2_reges_2 = b'([a-zA-Z0-9\-]+\.apps\.googleusercontent\.com)'
 
         cfg = ExtractorModel(family=self.family)
         cfg.http.append(cfg.Http(uri=re.search(c2_regex_1, second_stage.next_stage).match(1), usage=ConnUsageEnum("c2")))
