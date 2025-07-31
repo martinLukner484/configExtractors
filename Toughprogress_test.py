@@ -1,9 +1,7 @@
 import struct
-import binascii
 import re
-from maco.extractor import Extractor
-from maco.model import ExtractorModel
-from typing import BinaryIO, List, Optional
+
+FILE_PATH = "/home/user/Downloads/image/6.jpg"
 
 def _decompress_lznt1_chunk(chunk):
     out = bytes()
@@ -51,9 +49,17 @@ def decompress_lznt1(buf, length_check=True):
             else:
                 out += chunk
         buf = buf[2+length:]
-
     return out
 
+def get_null_terminated_string(data, begin):
+    i = begin
+    result = ""
+    while data[i] != 0:
+        print(data[i])
+        result = result + chr(data[i])
+        i = i + 1
+    return result
+    
 def xor_decode(data, addr, length):
     result = []
     for i in range(length):
@@ -78,15 +84,6 @@ def find_matching_section(data):
                 index = index + 1
             if seed == struct.unpack('<L', data[address + size - lastField + 0x7:address + size - lastField + 0xB])[0]:
                 return (address, size, lastField)
-
-def get_null_terminated_string(data, begin):
-    i = begin
-    result = ""
-    while data[i] != 0:
-        print(data[i])
-        result = result + chr(data[i])
-        i = i + 1
-    return result
    
 class Stage:
     def __init__(self, data):
@@ -106,61 +103,28 @@ class Stage:
         offset_compressed_payload = struct.unpack('<L', self.data[self.config_address + 0xD:self.config_address + 0xD + 4])[0] + self.config_address
         size_uncompressed_payload = struct.unpack('<L', self.data[self.config_address + 0x5:self.config_address + 0x5 + 4])[0] 
         size_compressed_payload = struct.unpack('<L', self.data[self.config_address + 0x9:self.config_address + 0x9 + 4])[0] 
-        self.config_address = config_address
         self.offset_compressed_payload = offset_compressed_payload
         self.size_uncompressed_payload = size_uncompressed_payload
         self.size_compressed_payload = size_compressed_payload
         
     def decompress_contained_stage(self):
         self.next_stage = decompress_lznt1(self.data[self.offset_compressed_payload:self.offset_compressed_payload + self.size_compressed_payload])
+        
+with open(FILE_PATH, 'rb') as f:
+	content = f.read()
+first_stage_size = struct.unpack('<L', content[3:7])[0]
+first_stage_base = len(content) - first_stage_size
+first_stage_data = xor_decode(content, first_stage_base, first_stage_size)
+first_stage_data = first_stage_data[0x28:]
+first_stage = Stage(first_stage_data)  
+path = get_null_terminated_string(first_stage_data, first_stage.config_address + 0x11)
+print(path)
 
-class ToughprogressParser(Extractor):
-    family = "Toughprogress"
-    author = "Martin Lukner"
-    last_modified = "2025-07-23"
-    sharing: str = "TLP:CLEAR"
-    yara_rule: str = """
-        rule testRule {
-            meta:
-                description = "Just for testing purposes"
-                author = "Martin Lukner"
+second_stage_data = first_stage.next_stage
+(address, size, lastField) = find_matching_section(second_stage_data)
+second_stage_size = struct.unpack('<L', second_stage_data[address + size - lastField - 1: address + size - lastField + 3])[0]
+second_stage_base = address + size - second_stage_size - 4
 
-            strings:
-                $s = {ee ec ab cf}
-
-            condition:
-                all of them 
-            }
-        """
-
-    def run(self, stream: BinaryIO, matches:List = []) -> Optional[ExtractorModel]:
-        content = stream.read()
-
-        first_stage_size = struct.unpack('<L', content[3:7])[0]
-        first_stage_base = len(content) - first_stage_size
-        first_stage_data = xor_decode(content, first_stage_base, first_stage_size)
-        first_stage_data = first_stage_data[0x28:]
-        first_stage = Stage(first_stage_data)  
-
-        second_stage_data = first_stage.next_stage
-        (address, size, lastField) = find_matching_section(second_stage_data)
-        second_stage_size = struct.unpack('<L', second_stage_data[address + size - lastField - 1: address + size - lastField + 3])[0]
-        second_stage_base = address + size - second_stage_size - 4
-
-        print(f"size: {hex(second_stage_size)}, second_stage_base: {hex(second_stage_data[second_stage_base])}")
-        second_stage_data = xor_decode(second_stage_data, second_stage_base, second_stage_size)
-        second_stage = Stage(second_stage_data)
-
-        cfg = ExtractorModel(family=self.family)
-        cfg.inject_exe.append(get_null_terminated_string(first_stage_data, first_stage.config_address + 0x11))
-        return cfg
-
-if __name__ == "__main__":
-    parser = ToughprogressParser()
-    file_path = argv[1]
-    with open(file_path, 'rb') as f:
-        result = parser.run(f)
-        if result:
-            print(result.model_dump_json(indent=2, exclude_none=True, exclude_defaults=True))
-        else:
-            print("No configuration extracted!")
+print(f"size: {hex(second_stage_size)}, second_stage_base: {hex(second_stage_data[second_stage_base])}")
+second_stage_data = xor_decode(second_stage_data, second_stage_base, second_stage_size)
+second_stage = Stage(second_stage_data)
