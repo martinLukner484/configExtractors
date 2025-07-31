@@ -78,6 +78,13 @@ def find_matching_section(data):
             if seed == struct.unpack('<L', data[address + size - lastField + 0x7:address + size - lastField + 0xB])[0]:
                 return (address, size, lastField)
 
+def wstr_to_str(wstr):
+    result = ''
+    for i in range(len(wstr)):
+        if i % 2 == 0:
+            result = result + chr(wstr[i])
+    return result
+
 def get_null_terminated_string(data, begin):
     i = begin
     result = ""
@@ -147,12 +154,12 @@ class ToughprogressParser(Extractor):
         second_stage_data = xor_decode(second_stage_data, second_stage_base, second_stage_size)
         second_stage = Stage(second_stage_data)
 
-        c2_regex_1 = b'([abcdefABCDEF0-9]+@group\.calendar\.google\.com\/events)'
-        c2_reges_2 = b'([a-zA-Z0-9\-]+\.apps\.googleusercontent\.com)'
+        c2_regex_1 = b'(([abcdefABCDEF0-9]\x00)+\x40\x00\x67\x00\x72\x00\x6f\x00\x75\x00\x70\x00\x2e\x00\x63\x00\x61\x00\x6c\x00\x65\x00\x6e\x00\x64\x00\x61\x00\x72\x00\x2e\x00\x67\x00\x6f\x00\x6f\x00\x67\x00\x6c\x00\x65\x00\x2e\x00\x63\x00\x6f\x00\x6d)'
+        c2_regex_2 = b'([a-zA-Z0-9\-]+\.apps\.googleusercontent\.com)'
 
         cfg = ExtractorModel(family=self.family)
-        cfg.http.append(cfg.Http(uri=re.search(c2_regex_1, second_stage.next_stage).match(1), usage=ConnUsageEnum("c2")))
-        cfg.http.append(cfg.Http(uri=re.search(c2_regex_2, second_stage.next_stage).match(1), usage=ConnUsageEnum("c2")))
+        cfg.http.append(cfg.Http(uri=wstr_to_str(re.search(c2_regex_1, second_stage.next_stage).group(0)), usage=ConnUsageEnum("c2")))
+        cfg.http.append(cfg.Http(uri=re.search(c2_regex_2, second_stage.next_stage).group(0).decode('ascii'), usage=ConnUsageEnum("c2")))
         cfg.inject_exe.append(get_null_terminated_string(first_stage_data, first_stage.config_address + 0x11))
         return cfg
 
