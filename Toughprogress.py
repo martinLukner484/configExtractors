@@ -2,7 +2,7 @@ import struct
 import binascii
 import re
 from maco.extractor import Extractor
-from maco.model import ExtractorModel
+from maco.model import ExtractorModel, ConnUsageEnum
 from typing import BinaryIO, List, Optional
 
 def _decompress_lznt1_chunk(chunk):
@@ -148,7 +148,7 @@ class ToughprogressParser(Extractor):
         second_stage = Stage(second_stage_data)
 
         cfg = ExtractorModel(family=self.family)
-        cfg.http.append(cfg.Http(uri="test.com", usage=cfg.ConnUsageEnum("c2")))
+        cfg.http.append(cfg.Http(uri="test.com", usage=ConnUsageEnum("c2")))
         cfg.inject_exe.append(get_null_terminated_string(first_stage_data, first_stage.config_address + 0x11))
         return cfg
 
