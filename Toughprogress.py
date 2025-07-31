@@ -106,7 +106,6 @@ class Stage:
         offset_compressed_payload = struct.unpack('<L', self.data[self.config_address + 0xD:self.config_address + 0xD + 4])[0] + self.config_address
         size_uncompressed_payload = struct.unpack('<L', self.data[self.config_address + 0x5:self.config_address + 0x5 + 4])[0] 
         size_compressed_payload = struct.unpack('<L', self.data[self.config_address + 0x9:self.config_address + 0x9 + 4])[0] 
-        self.config_address = config_address
         self.offset_compressed_payload = offset_compressed_payload
         self.size_uncompressed_payload = size_uncompressed_payload
         self.size_compressed_payload = size_compressed_payload
